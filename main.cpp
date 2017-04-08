@@ -54,8 +54,7 @@ std::vector<State> parseMachine(char* filename) {
 bool runMachine(std::vector<State> states, string input) {
     string currentStateName = "0";
     State *curStatePtr = NULL;
-    int headPos = 0;
-    bool running = true;
+    int headPos = 0, endOfTape = (int) input.size();
 
     char tape[256];
     for (int i = 0; i < 256; ++i) {
@@ -65,22 +64,22 @@ bool runMachine(std::vector<State> states, string input) {
             tape[i] = '_';
     }
 
-    while(running) {
-        for (int i = 0; i < 256; ++i)
+    while (true) {
+        for (int i = 0; i < endOfTape; ++i)
             cout << tape[i];
         cout << endl;
         for (int i = 0; i < headPos; ++i)
             cout << ' ';
         cout << '^' << endl;
-        cout << "Current State: " << currentStateName << endl;
-        cout << "Current Symbol: " << tape[headPos] << endl;
+        cout << headPos << "/" << endOfTape << endl;
+        cout << "Current State: " << currentStateName << "\tCurrent Symbol: " << tape[headPos] << endl;
         for (int i = 0; i < states.size(); ++i) {
             cout << "Looking at state: " << states.at(i).getName() << endl;
             if (states.at(i).getName() == currentStateName) {
                 cout << "\tLooking at symbol: " << states.at(i).getCurrentSymbol() << endl;
                 if (states.at(i).getCurrentSymbol() == tape[headPos] || states.at(i).getCurrentSymbol() == '*') {
                     curStatePtr = &states.at(i);
-                    cout << "Match!: " << *curStatePtr << endl;
+                    cout << "Matched this state: " << *curStatePtr << endl;
                     break;
                 }
             }
@@ -91,8 +90,10 @@ bool runMachine(std::vector<State> states, string input) {
         }
         currentStateName = curStatePtr->getNewState();
         tape[headPos] = curStatePtr->getNewSymbol();
-        if (currentStateName == "halt-accept" || currentStateName == "halt-reject")
-            running = false;
+        if (currentStateName == "halt-accept")
+            return true;
+        if (currentStateName == "halt-reject")
+            return false;
 
         if (curStatePtr->getDirection() == 'r') {
             headPos += 1;
@@ -102,8 +103,8 @@ bool runMachine(std::vector<State> states, string input) {
             else
                 headPos -= 1;
         } else {}
-        char x;
-        //std::cin >> x;
+        if (headPos >= endOfTape)
+            endOfTape++;
         curStatePtr = NULL;
     }
 }
@@ -114,6 +115,12 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     std::vector<State> states = parseMachine(argv[1]);
-    runMachine(states, "1001001");
+    bool rslt = runMachine(states, "1001001");
+
+    if (rslt) {
+        cout << "ACCEPT!" << endl;
+    } else {
+        cout << "REJECT!" << endl;
+    }
     return 0;
 }
