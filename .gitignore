@@ -27,3 +27,6 @@
 *.exe
 *.out
 *.app
+
+# CMake debugger
+cmake-build-debug/

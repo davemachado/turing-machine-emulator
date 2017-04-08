@@ -51,14 +51,69 @@ std::vector<State> parseMachine(char* filename) {
     return states;
 }
 
+bool runMachine(std::vector<State> states, string input) {
+    string currentStateName = "0";
+    State *curStatePtr = NULL;
+    int headPos = 0;
+    bool running = true;
+
+    char tape[256];
+    for (int i = 0; i < 256; ++i) {
+        if (i < input.size())
+            tape[i] = input.at(i);
+        else
+            tape[i] = '_';
+    }
+
+    while(running) {
+        for (int i = 0; i < 256; ++i)
+            cout << tape[i];
+        cout << endl;
+        for (int i = 0; i < headPos; ++i)
+            cout << ' ';
+        cout << '^' << endl;
+        cout << "Current State: " << currentStateName << endl;
+        cout << "Current Symbol: " << tape[headPos] << endl;
+        for (int i = 0; i < states.size(); ++i) {
+            cout << "Looking at state: " << states.at(i).getName() << endl;
+            if (states.at(i).getName() == currentStateName) {
+                cout << "\tLooking at symbol: " << states.at(i).getCurrentSymbol() << endl;
+                if (states.at(i).getCurrentSymbol() == tape[headPos] || states.at(i).getCurrentSymbol() == '*') {
+                    curStatePtr = &states.at(i);
+                    cout << "Match!: " << *curStatePtr << endl;
+                    break;
+                }
+            }
+        }
+        if (curStatePtr == NULL) {
+            cout << "No matching state!" << endl;
+            exit(2);
+        }
+        currentStateName = curStatePtr->getNewState();
+        tape[headPos] = curStatePtr->getNewSymbol();
+        if (currentStateName == "halt-accept" || currentStateName == "halt-reject")
+            running = false;
+
+        if (curStatePtr->getDirection() == 'r') {
+            headPos += 1;
+        } else if (curStatePtr->getDirection() == 'l') {
+            if (headPos == 0)
+                headPos = 0;
+            else
+                headPos -= 1;
+        } else {}
+        char x;
+        //std::cin >> x;
+        curStatePtr = NULL;
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         cout << "No Turing Machine given." << endl;
         exit(1);
     }
     std::vector<State> states = parseMachine(argv[1]);
-    for (std::vector<State>::iterator i = states.begin(); i != states.end(); ++i) {
-        cout << *i << endl;
-    }
+    runMachine(states, "1001001");
     return 0;
 }
